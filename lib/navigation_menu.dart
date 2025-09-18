@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:get/get.dart';
-
+import 'pages/home/home.dart';
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
   @override
@@ -22,6 +22,7 @@ class NavigationMenu extends StatelessWidget {
           ],
         ),
       ),
+      body: Obx(() => controller.screens[controller.selectedIndex.value]),
     );
   }
 }
@@ -29,5 +30,5 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
-  final screens = [];
+  final screens = [HomePage(), Container(color: Colors.red)];
 }
