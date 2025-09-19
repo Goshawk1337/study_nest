@@ -9,16 +9,30 @@ class AppTranslations extends Translations {
 
   @override
   Map<String, Map<String, String>> get keys => {
-    'en': {
-      'title': 'What the sigma',
-      'welcome': 'Welcome to our multilingual Flutter app!',
-      'change_language': 'Change Language',
-    },
-    'hu': {
-      'title': 'स्थानीयीकरण एप्प',
-      'welcome': 'हमारे बहुभाषीक Flutter एप्प में आपका स्वागत है!',
-      'change_language': 'भाषा बदलें',
-    },
+'en': {
+    'early_morning_greeting': 'You’re up early, ',
+    'morning_greeting': 'Good morning, ',
+    'noon_greeting': 'Good noon, ',
+    'afternoon_greeting': 'Good afternoon, ',
+    'evening_greeting': 'Good evening, ',
+    'night_greeting': 'Good night, ',
+    'welcome': 'Welcome, ',
+    'next_class': 'Next class',
+    'change_language': 'Change Language',
+  },
+  'hu': {
+    'early_morning_greeting': 'Korán érkeztél, ',
+    'morning_greeting': 'Jó reggelt, ',
+    'forenoon_greeting': 'Szép délelőttöt, ',
+    'noon_greeting': 'Jó étvágyat ebédhez, ',
+    'afternoon_greeting': 'Szép délutánt, ',
+    'evening_greeting': 'Jó estét, ',
+    'night_greeting': 'Jó éjszakát, ',
+    'welcome': 'Üdv, ',
+    'next_class': 'Következő óra',
+
+    'change_language': 'Nyelv váltása',
+  },
  
     // Add other languages
   };
