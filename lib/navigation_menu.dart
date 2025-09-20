@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import 'package:get/get.dart';
 import 'pages/home/home.dart';
+import 'pages/login/login.dart';
+
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
   @override
@@ -9,16 +11,16 @@ class NavigationMenu extends StatelessWidget {
 
     return Scaffold(
       bottomNavigationBar: Obx(
-        () => NavigationBar(
-          selectedIndex: controller.selectedIndex.value,
-          onDestinationSelected: (value) =>
-              controller.selectedIndex.value = value,
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
-            NavigationDestination(
+        () => BottomNavigationBar(
+          currentIndex: controller.selectedIndex.value,
+          onTap: (value) => controller.selectedIndex.value = value,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
               icon: Icon(Icons.settings),
               label: 'Settings',
             ),
+            BottomNavigationBarItem(icon: Icon(Icons.login), label: 'Login'),
           ],
         ),
       ),
@@ -30,5 +32,5 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
-  final screens = [HomePage(), Container(color: Colors.red)];
+  final screens = [HomePage(), Container(color: Colors.red), LoginPage()];
 }
