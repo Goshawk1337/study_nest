@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:study_nest/controllers/language_controller.dart';
 import 'package:get/get.dart';
 import 'package:study_nest/utils/languages.dart';
-import "navigation_menu.dart";
+import 'services/auth_controller.dart';
+// import "navigation_menu.dart";
+import './services/auth_wrapper.dart';
 
 void main() {
   Get.put(LanguageController());
+  Get.put(AuthController()); // 👈 add this
   runApp(const MyApp());
 }
 
@@ -23,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: NavigationMenu()
+      home: AuthWrapper()
     );
   }
 }

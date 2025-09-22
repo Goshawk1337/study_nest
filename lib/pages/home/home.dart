@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: Colors.blueAccent,
+                color: Colors.blue,
               ),
               padding: EdgeInsets.all(16),
               width: double.infinity,
@@ -83,12 +83,12 @@ class HomePage extends StatelessWidget {
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: Colors.blueAccent,
+                  color: Colors.blue,
                 ),
                 padding: EdgeInsets.all(16),
                 child: SingleChildScrollView(
@@ -99,7 +99,7 @@ class HomePage extends StatelessWidget {
                         child: Container(
                           padding: EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.lightBlueAccent,
+                            color: Colors.lightBlue,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(

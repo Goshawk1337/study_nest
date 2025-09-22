@@ -1,137 +1,141 @@
-import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
+import 'dart:typed_data';
+import 'package:crypto/crypto.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:html/parser.dart' as html_parser;
+import 'package:webview_flutter/webview_flutter.dart';
 
-class TokenResponse {
-  final String accessToken;
-  final String tokenType;
-  final int expiresIn;
-  final String refreshToken;
+class LoginWebviewWidget extends StatefulWidget {
+  final String? username;
+  final String? schoolId;
 
-  TokenResponse({
-    required this.accessToken,
-    required this.tokenType,
-    required this.expiresIn,
-    required this.refreshToken,
-  });
+  const LoginWebviewWidget({super.key, this.username, this.schoolId});
 
-  factory TokenResponse.fromJson(Map<String, dynamic> json) {
-    return TokenResponse(
-      accessToken: json['access_token'],
-      tokenType: json['token_type'],
-      expiresIn: json['expires_in'],
-      refreshToken: json['refresh_token'],
-    );
-  }
+  @override
+  State<LoginWebviewWidget> createState() => _LoginWebviewWidgetState();
 }
 
-class ApiService {
-  static Future<TokenResponse> loginToKreta({
-    required String userName,
-    required String password,
-    required String instituteCode,
-  }) async {
-    final cookieJar = <String, String>{};
+class _LoginWebviewWidgetState extends State<LoginWebviewWidget> {
+  late WebViewController _webViewController;
 
-    Future<http.Response> makeRequest(Uri url,
-        {String method = 'GET', Map<String, String>? headers, Object? body}) async {
-      final requestHeaders = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        if (cookieJar.isNotEmpty)
-          'Cookie': cookieJar.entries.map((e) => '${e.key}=${e.value}').join('; '),
-        if (headers != null) ...headers,
-      };
+  late final String codeVerifier;
+  late final String codeChallenge;
+  late final String state;
+  late final String nonce;
 
-      http.Response response;
-      if (method == 'GET') {
-        response = await http.get(url, headers: requestHeaders);
-      } else {
-        response = await http.post(url, headers: requestHeaders, body: body);
-      }
+  static const String clientId = "kreta-ellenorzo-student-mobile-ios";
+  static const String redirectUri = "https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect";
+  static const String idpBase = "https://idp.e-kreta.hu";
 
-      final setCookie = response.headers['set-cookie'];
-      if (setCookie != null) {
-        for (var cookie in setCookie.split(',')) {
-          final parts = cookie.split(';').first.split('=');
-          if (parts.length == 2) cookieJar[parts[0].trim()] = parts[1].trim();
-        }
-      }
+  @override
+  void initState() {
+    super.initState();
 
-      return response;
-    }
+    codeVerifier = _generateCodeVerifier();
+    codeChallenge = _generateCodeChallenge(codeVerifier);
+    state = _generateRandomString();
+    nonce = _generateRandomString();
 
-    final initialUrl = Uri.parse(
-        'https://idp.e-kreta.hu/Account/Login?ReturnUrl=%2Fconnect%2Fauthorize%2Fcallback%3Fprompt%3Dlogin');
-    final initialResponse = await makeRequest(initialUrl);
-    if (initialResponse.statusCode != 200) {
-      throw Exception('Failed to fetch login page: ${initialResponse.statusCode}');
-    }
-
-    final doc = html_parser.parse(initialResponse.body);
-    final tokenInput = doc.querySelector('input[name="__RequestVerificationToken"]');
-    if (tokenInput == null) throw Exception('RequestVerificationToken not found');
-    final rvt = tokenInput.attributes['value'] ?? '';
-
-    final loginPayload = {
-      'ReturnUrl': '/connect/authorize/callback?prompt=login',
-      'IsTemporaryLogin': 'false',
-      'UserName': userName,
-      'Password': password,
-      'InstituteCode': instituteCode,
-      'loginType': 'InstituteLogin',
-      '__RequestVerificationToken': rvt,
-    };
-
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    final loginResponse = await makeRequest(
-      Uri.parse('https://idp.e-kreta.hu/account/login'),
-      method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: loginPayload.entries.map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}').join('&'),
+    var loginUrl = _buildLoginUrl(
+      username: widget.username,
+      schoolId: widget.schoolId,
     );
 
-    if (loginResponse.statusCode != 302 &&
-        loginResponse.statusCode != 200) {
-      throw Exception('Login failed: ${loginResponse.statusCode}');
-    }
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) async {
+            final uri = Uri.parse(request.url);
 
-    final authUrl = Uri.parse(
-        'https://idp.e-kreta.hu/connect/authorize/callback?prompt=login');
-    final authResponse = await makeRequest(authUrl, method: 'GET');
-    final location = authResponse.headers['location'];
-    if (location == null) throw Exception('No redirect location found');
+            if (uri.path.endsWith("/ellenorzo-student/prod/oauthredirect")) {
+              final code = uri.queryParameters["code"];
+              if (code != null) {
+                final token = await _exchangeCodeForToken(code);
+                if (!mounted) return NavigationDecision.prevent;
+                Navigator.of(context).pop(token);
+              }
+              return NavigationDecision.prevent;
+            }
 
-    final uri = Uri.parse(location);
-    final code = uri.queryParameters['code'];
-    if (code == null) throw Exception('Authorization code not found');
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(loginUrl));
+  }
 
-    final tokenPayload = {
-      'code': code,
-      'code_verifier': 'DSpuqj_HhDX4wzQIbtn8lr8NLE5wEi1iVLMtMK0jY6c',
-      'redirect_uri':
-          'https://mobil.e-kreta.hu/ellenorzo-student/prod/oauthredirect',
-      'client_id': 'kreta-ellenorzo-student-mobile-ios',
-      'userName': userName,
-      'password': password,
-      'institute_code': instituteCode,
-      'grant_type': 'authorization_code',
-    };
+  String _buildLoginUrl({String? username, String? schoolId}) {
+    final base = "$idpBase/Account/Login?ReturnUrl=";
+    final returnUrl =
+        Uri.encodeComponent("/connect/authorize/callback?redirect_uri=$redirectUri"
+            "&client_id=$clientId"
+            "&response_type=code"
+            "${username != null ? "&login_hint=$username" : ""}"
+            "&prompt=login"
+            "&state=$state"
+            "&nonce=$nonce"
+            "&scope=openid%20email%20offline_access%20kreta-ellenorzo-webapi.public"
+            "%20kreta-eugyintezes-webapi.public%20kreta-fileservice-webapi.public"
+            "%20kreta-mobile-global-webapi.public%20kreta-dkt-webapi.public%20kreta-ier-webapi.public"
+            "&code_challenge=$codeChallenge"
+            "&code_challenge_method=S256"
+            "${schoolId != null ? "&institute_code=$schoolId" : ""}"
+            "&suppressed_prompt=login");
 
-    final tokenResponse = await http.post(
-      Uri.parse('https://idp.e-kreta.hu/connect/token'),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: tokenPayload.entries
-          .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
-          .join('&'),
+    return "$base$returnUrl";
+  }
+
+  Future<Map<String, dynamic>> _exchangeCodeForToken(String code) async {
+    final response = await http.post(
+      Uri.parse("$idpBase/connect/token"),
+      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      body: {
+        "grant_type": "authorization_code",
+        "client_id": clientId,
+        "code": code,
+        "redirect_uri": redirectUri,
+        "code_verifier": codeVerifier,
+      },
     );
 
-    if (tokenResponse.statusCode != 200) {
-      throw Exception('Token exchange failed: ${tokenResponse.statusCode}');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception("Failed to exchange token: ${response.body}");
     }
+  }
 
-    final tokens = TokenResponse.fromJson(jsonDecode(tokenResponse.body));
-    return tokens;
+  String _generateCodeVerifier() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    return base64Url.encode(bytes).replaceAll("=", "");
+  }
+
+  String _generateCodeChallenge(String verifier) {
+    final bytes = utf8.encode(verifier);
+    final digest = sha256.convert(bytes);
+    return base64Url.encode(digest.bytes).replaceAll("=", "");
+  }
+
+  String _generateRandomString([int length = 16]) {
+    final random = Random.secure();
+    final bytes = Uint8List(length);
+    for (int i = 0; i < length; i++) {
+      bytes[i] = random.nextInt(256);
+    }
+    return base64Url.encode(bytes).replaceAll("=", "");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Kréta Login")),
+      body: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: WebViewWidget(controller: _webViewController),
+      ),
+    );
   }
 }

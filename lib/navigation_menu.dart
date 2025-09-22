@@ -1,7 +1,6 @@
 import "package:flutter/material.dart";
 import 'package:get/get.dart';
 import 'pages/home/home.dart';
-import 'pages/login/login.dart';
 
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
@@ -20,7 +19,6 @@ class NavigationMenu extends StatelessWidget {
               icon: Icon(Icons.settings),
               label: 'Settings',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.login), label: 'Login'),
           ],
         ),
       ),
@@ -32,5 +30,5 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController {
   final Rx<int> selectedIndex = 0.obs;
 
-  final screens = [HomePage(), Container(color: Colors.red), LoginPage()];
+  final screens = [HomePage(), Container(color: Colors.red)];
 }

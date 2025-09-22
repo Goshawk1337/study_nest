@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../services/login.dart';
+import '../../services/auth_controller.dart';
+import 'package:get/get.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -11,7 +13,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController idController = TextEditingController();
   final TextEditingController instituteController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
 
   List<dynamic> schoolOptions = [];
   List<dynamic> filteredSchools = [];
@@ -66,13 +67,27 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() async {
-    final result = await ApiService.loginToKreta(
-      userName: idController.text,
-      instituteCode: instituteController.text,
-      password: passwordController.text,
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LoginWebviewWidget(
+          username: idController.text,
+          schoolId: selectedSchool != null ? selectedSchool['azonosito'] : null,
+        ),
+      ),
     );
 
-    print(result.accessToken);
+    if (result != null) {
+      final auth = Get.find<AuthController>();
+      auth.login(
+        accessToken: result['access_token'],
+        refreshToken: result['refresh_token'],
+        instituteCode: selectedSchool['azonosito'],
+        expiresInSeconds: result['expires_in'] ?? 3600,
+      );
+    } else {
+      print("Login canceled or failed");
+    }
   }
 
 
@@ -99,15 +114,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 15),
               TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "Jelszó",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
                 controller: instituteController,
                 onChanged: filterSchools,
                 autocorrect: false,
@@ -121,8 +127,12 @@ class _LoginPageState extends State<LoginPage> {
                 Container(
                   height: 200,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black, width: 1, style: BorderStyle.solid),
-                    borderRadius: BorderRadius.circular(10)
+                    border: Border.all(
+                      color: Colors.black,
+                      width: 1,
+                      style: BorderStyle.solid,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: ListView(
                     padding: EdgeInsets.all(0.0),
