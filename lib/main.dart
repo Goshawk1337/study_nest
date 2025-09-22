@@ -8,7 +8,7 @@ import './services/auth_wrapper.dart';
 
 void main() {
   Get.put(LanguageController());
-  Get.put(AuthController()); // 👈 add this
+  Get.put(AuthController());
   runApp(const MyApp());
 }
 
