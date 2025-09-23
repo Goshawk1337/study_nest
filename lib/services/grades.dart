@@ -19,7 +19,7 @@ class Grade {
   final ValueDescriptor? type;
   final String? uid;
   final String? value;
-  final String? weight;
+  final int? weight;
 
   const Grade({
     this.creatingTimeAsString,
@@ -49,9 +49,7 @@ class Grade {
           ? ValueDescriptor.fromJson(json['ErtekFajta'] as Map<String, dynamic>)
           : null,
       group: json['OsztalyCsoport'] != null
-          ? UidStructure.fromJson(
-              json['OsztalyCsoport'] as Map<String, dynamic>,
-            )
+          ? UidStructure.fromJson(json['OsztalyCsoport'] as Map<String, dynamic>)
           : null,
       mode: json['Mod'] != null
           ? ValueDescriptor.fromJson(json['Mod'] as Map<String, dynamic>)
@@ -71,14 +69,12 @@ class Grade {
           : null,
       uid: json['Uid'] as String?,
       value: json['SzovegesErtek'] as String?,
-      weight: json['SulySzazalekErteke'] as String?,
+      weight: json['SulySzazalekErteke'] as int?,
     );
   }
 
   static List<Grade> listFromJson(List<dynamic> jsonList) {
-    return jsonList
-        .map((json) => Grade.fromJson(json as Map<String, dynamic>))
-        .toList();
+    return jsonList.map((json) => Grade.fromJson(json as Map<String, dynamic>)).toList();
   }
 }
 
@@ -127,22 +123,25 @@ class SubjectDescriptor {
     return SubjectDescriptor(
       uid: json['Uid'] as String,
       name: json['Nev'] as String,
-      category: ValueDescriptor.fromJson(
-        json['Kategoria'] as Map<String, dynamic>,
-      ),
+      category: ValueDescriptor.fromJson(json['Kategoria'] as Map<String, dynamic>),
     );
   }
 }
 
 class Grades extends GetxController {
+  List<Grade>? _cachedGrades;
+
   Future<List<Grade>> getGrades({
     required String accessToken,
     required String instituteCode,
+    bool forceRefresh = false,
   }) async {
+    if (!forceRefresh && _cachedGrades != null) {
+      return _cachedGrades!;
+    }
+
     final response = await http.get(
-      Uri.parse(
-        'https://$instituteCode.e-kreta.hu/ellenorzo/v3/sajat/Ertekelesek',
-      ),
+      Uri.parse('https://$instituteCode.e-kreta.hu/ellenorzo/v3/sajat/Ertekelesek'),
       headers: {
         'Authorization': 'Bearer $accessToken',
         'Content-Type': 'application/json',
@@ -151,12 +150,16 @@ class Grades extends GetxController {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+      print(data[2]);
 
-      print(data);
-
-      return Grade.listFromJson(data);
+      _cachedGrades = Grade.listFromJson(data);
+      return _cachedGrades!;
     } else {
       throw Exception('Failed to load grades: ${response.statusCode}');
     }
+  }
+
+  void clearCache() {
+    _cachedGrades = null;
   }
 }
