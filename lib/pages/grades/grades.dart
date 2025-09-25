@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:study_nest/controllers/kreta_controller.dart';
 import 'package:study_nest/utils/icons.dart';
-import '../../services/grades.dart'; // the file with Grades + models
-import '../../services/auth_controller.dart'; // your AuthController
+import '../../models/grade.dart';
+import 'package:study_nest/controllers/language_controller.dart';
 
 class GradesPage extends StatefulWidget {
   @override
@@ -10,11 +11,15 @@ class GradesPage extends StatefulWidget {
 }
 
 class _GradesPageState extends State<GradesPage> {
-  final authController = Get.find<AuthController>();
-  final gradesService = Get.put(Grades());
+  final LanguageController languageController = Get.find<LanguageController>();
+  final gradesService = Get.put(KretaController());
 
   List<Grade> grades = [];
+  List<Grade> filteredGrades = [];
   bool isLoading = true;
+
+  String? selectedSubject;
+  List<String> allSubjects = [];
 
   @override
   void initState() {
@@ -23,21 +28,25 @@ class _GradesPageState extends State<GradesPage> {
   }
 
   Future<void> _loadGrades({bool forceRefresh = false}) async {
-    if (!authController.isLoggedIn) {
-      Get.snackbar("Error", "You must log in first");
-      return;
-    }
-
     setState(() => isLoading = true);
 
     try {
       final loadedGrades = await gradesService.getGrades(
-        accessToken: authController.accessToken.value!,
-        instituteCode: authController.instituteCode.value!,
         forceRefresh: forceRefresh,
       );
 
-      setState(() => grades = loadedGrades);
+      final subjects = loadedGrades
+          .map((g) => g.subject?.name ?? "")
+          .where((s) => s.isNotEmpty)
+          .toSet()
+          .toList();
+
+      setState(() {
+        grades = loadedGrades;
+        allSubjects = subjects;
+        filteredGrades = loadedGrades;
+        selectedSubject = null;
+      });
     } catch (e) {
       Get.snackbar("Error", "Failed to load grades: $e");
     } finally {
@@ -45,98 +54,187 @@ class _GradesPageState extends State<GradesPage> {
     }
   }
 
+  void _filterBySubject(String? subject) {
+    setState(() {
+      selectedSubject = subject;
+
+      if (subject == null || subject.isEmpty) {
+        filteredGrades = grades;
+      } else {
+        filteredGrades = grades
+            .where(
+              (g) => g.subject?.name.toLowerCase() == subject.toLowerCase(),
+            )
+            .toList();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Grades")),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : grades.isEmpty
-          ? Center(child: Text("No grades found."))
-          : RefreshIndicator(
-              onRefresh: () => _loadGrades(forceRefresh: true),
-              child: ListView.builder(
-                padding: EdgeInsets.all(8),
-                itemCount: grades.length,
-                itemBuilder: (context, index) {
-                  final grade = grades[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.lightBlue,
-                        borderRadius: BorderRadius.circular(8),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: "Szűrő",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: [
+                DropdownMenuItem(value: null, child: Text("Összes tantárgy")),
+                ...allSubjects.map(
+                  (s) => DropdownMenuItem(value: s, child: Text(s)),
+                ),
+              ],
+              onChanged: _filterBySubject,
+            ),
+          ),
+
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.lightBlue,
+              ),
+              padding: EdgeInsets.all(16),
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 8,
+                children: [
+                  Text(
+                    "${selectedSubject ?? ""} ${"avg".tr}",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    "Atlagjonide",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    spacing: 8,
+                    children: [
+                      Text(
+                        "osztatlag",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          GradeIcon.getIcon(grade, size: 32),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : filteredGrades.isEmpty
+                ? Center(child: Text("No grades found."))
+                : RefreshIndicator(
+                    onRefresh: () => _loadGrades(forceRefresh: true),
+                    child: ListView.builder(
+                      padding: EdgeInsets.all(16),
+                      itemCount: filteredGrades.length,
+                      itemBuilder: (context, index) {
+                        final grade = filteredGrades[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.lightBlue,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
                               children: [
-                                Text(
-                                  grade.subject?.name ?? "No subject",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                GradeIcon.getIcon(grade, size: 32),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        grade.subject?.name ?? "Nincs tantárgy",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        grade.theme ?? "No theme",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        grade.recordDateAsString != null
+                                            ? DateTime.tryParse(
+                                                        grade.recordDateAsString ??
+                                                            "",
+                                                      ) !=
+                                                      null
+                                                  ? "${DateTime.parse(grade.recordDateAsString ?? "").year}-"
+                                                        "${DateTime.parse(grade.recordDateAsString ?? "").month.toString().padLeft(2, '0')}-"
+                                                        "${DateTime.parse(grade.recordDateAsString ?? "").day.toString().padLeft(2, '0')}"
+                                                  : grade.recordDateAsString!
+                                            : "No Date",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                SizedBox(height: 4),
-                                Text(
-                                  grade.theme ?? "No theme",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(24),
                                   ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  grade.recordDateAsString != null
-                                      ? DateTime.tryParse(
-                                                  grade.recordDateAsString ??
-                                                      "",
-                                                ) !=
-                                                null
-                                            ? "${DateTime.parse(grade.recordDateAsString ?? "").year}-"
-                                                  "${DateTime.parse(grade.recordDateAsString ?? "").month.toString().padLeft(2, '0')}-"
-                                                  "${DateTime.parse(grade.recordDateAsString ?? "").day.toString().padLeft(2, '0')}"
-                                            : grade.recordDateAsString!
-                                      : "No Date",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 14,
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    grade.numberValue?.toString() ?? "-",
+                                    style: TextStyle(
+                                      color: GradeIcon.getColorByGrade(grade),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 24,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              grade.numberValue?.toString() ?? "-",
-                              style: TextStyle(
-                                color: GradeIcon.getColorByGrade(grade),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }

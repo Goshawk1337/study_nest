@@ -1,6 +1,52 @@
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+class ValueDescriptor {
+  final String description;
+  final String name;
+  final String uid;
+
+  const ValueDescriptor({
+    required this.description,
+    required this.name,
+    required this.uid,
+  });
+
+  factory ValueDescriptor.fromJson(Map<String, dynamic> json) {
+    return ValueDescriptor(
+      description: json['Leiras'] as String,
+      name: json['Nev'] as String,
+      uid: json['Uid'] as String,
+    );
+  }
+}
+
+class UidStructure {
+  final String uid;
+
+  const UidStructure({required this.uid});
+
+  factory UidStructure.fromJson(Map<String, dynamic> json) {
+    return UidStructure(uid: json['Uid'] as String);
+  }
+}
+
+class SubjectDescriptor {
+  final String uid;
+  final String name;
+  final ValueDescriptor category;
+
+  const SubjectDescriptor({
+    required this.uid,
+    required this.name,
+    required this.category,
+  });
+
+  factory SubjectDescriptor.fromJson(Map<String, dynamic> json) {
+    return SubjectDescriptor(
+      uid: json['Uid'] as String,
+      name: json['Nev'] as String,
+      category: ValueDescriptor.fromJson(json['Kategoria'] as Map<String, dynamic>),
+    );
+  }
+}
 
 class Grade {
   final String? creatingTimeAsString;
@@ -75,91 +121,5 @@ class Grade {
 
   static List<Grade> listFromJson(List<dynamic> jsonList) {
     return jsonList.map((json) => Grade.fromJson(json as Map<String, dynamic>)).toList();
-  }
-}
-
-class ValueDescriptor {
-  final String description;
-  final String name;
-  final String uid;
-
-  const ValueDescriptor({
-    required this.description,
-    required this.name,
-    required this.uid,
-  });
-
-  factory ValueDescriptor.fromJson(Map<String, dynamic> json) {
-    return ValueDescriptor(
-      description: json['Leiras'] as String,
-      name: json['Nev'] as String,
-      uid: json['Uid'] as String,
-    );
-  }
-}
-
-class UidStructure {
-  final String uid;
-
-  const UidStructure({required this.uid});
-
-  factory UidStructure.fromJson(Map<String, dynamic> json) {
-    return UidStructure(uid: json['Uid'] as String);
-  }
-}
-
-class SubjectDescriptor {
-  final String uid;
-  final String name;
-  final ValueDescriptor category;
-
-  const SubjectDescriptor({
-    required this.uid,
-    required this.name,
-    required this.category,
-  });
-
-  factory SubjectDescriptor.fromJson(Map<String, dynamic> json) {
-    return SubjectDescriptor(
-      uid: json['Uid'] as String,
-      name: json['Nev'] as String,
-      category: ValueDescriptor.fromJson(json['Kategoria'] as Map<String, dynamic>),
-    );
-  }
-}
-
-class Grades extends GetxController {
-  List<Grade>? _cachedGrades;
-
-  Future<List<Grade>> getGrades({
-    required String accessToken,
-    required String instituteCode,
-    bool forceRefresh = false,
-  }) async {
-    if (!forceRefresh && _cachedGrades != null) {
-      return _cachedGrades!;
-    }
-
-    final response = await http.get(
-      Uri.parse('https://$instituteCode.e-kreta.hu/ellenorzo/v3/sajat/Ertekelesek'),
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
-      print(data[2]);
-
-      _cachedGrades = Grade.listFromJson(data);
-      return _cachedGrades!;
-    } else {
-      throw Exception('Failed to load grades: ${response.statusCode}');
-    }
-  }
-
-  void clearCache() {
-    _cachedGrades = null;
   }
 }

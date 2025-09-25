@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/grades.dart';
+import '../models/grade.dart';
 
 class GradeIcon {
   static Icon getIcon(Grade grade, {double size = 32}) {

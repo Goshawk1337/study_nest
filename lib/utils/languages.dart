@@ -18,7 +18,10 @@ class AppTranslations extends Translations {
     'night_greeting': 'Good night, ',
     'welcome': 'Welcome, ',
     'next_class': 'Next class',
+
     'change_language': 'Change Language',
+
+    'avg': 'average',
   },
   'hu': {
     'early_morning_greeting': 'Korán érkeztél, ',
@@ -32,6 +35,8 @@ class AppTranslations extends Translations {
     'next_class': 'Következő óra',
 
     'change_language': 'Nyelv váltása',
+
+    'avg': 'átlag',
   },
  
     // Add other languages
