@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:study_nest/controllers/kreta_controller.dart';
-import 'package:study_nest/utils/icons.dart';
 import '../../models/grade.dart';
 import 'package:study_nest/controllers/language_controller.dart';
 
@@ -27,6 +26,8 @@ class _GradesPageState extends State<GradesPage> {
     _loadGrades();
   }
 
+  dynamic avg;
+
   Future<void> _loadGrades({bool forceRefresh = false}) async {
     setState(() => isLoading = true);
 
@@ -45,7 +46,8 @@ class _GradesPageState extends State<GradesPage> {
         grades = loadedGrades;
         allSubjects = subjects;
         filteredGrades = loadedGrades;
-        selectedSubject = null;
+        selectedSubject = "";
+        avg = gradesService.getAllTimeAverage()?.averageNumber;
       });
     } catch (e) {
       Get.snackbar("Error", "Failed to load grades: $e");
@@ -56,11 +58,15 @@ class _GradesPageState extends State<GradesPage> {
 
   void _filterBySubject(String? subject) {
     setState(() {
-      selectedSubject = subject;
 
       if (subject == null || subject.isEmpty) {
         filteredGrades = grades;
+        selectedSubject = "";
+        avg = gradesService.getAllTimeAverage()?.averageNumber;
       } else {
+        selectedSubject = "$subject ";
+        print(subject.toLowerCase());
+        avg = gradesService.getLocalAverages()[subject.toLowerCase()]?.averageNumber;
         filteredGrades = grades
             .where(
               (g) => g.subject?.name.toLowerCase() == subject.toLowerCase(),
@@ -109,7 +115,7 @@ class _GradesPageState extends State<GradesPage> {
                 spacing: 8,
                 children: [
                   Text(
-                    "${selectedSubject ?? ""} ${"avg".tr}",
+                    "${selectedSubject ?? ""}${"avg".tr}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -117,7 +123,7 @@ class _GradesPageState extends State<GradesPage> {
                     ),
                   ),
                   Text(
-                    "Atlagjonide",
+                    "$avg",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -164,7 +170,7 @@ class _GradesPageState extends State<GradesPage> {
                             ),
                             child: Row(
                               children: [
-                                GradeIcon.getIcon(grade, size: 32),
+                                grade.icon,
                                 SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
@@ -180,13 +186,22 @@ class _GradesPageState extends State<GradesPage> {
                                         ),
                                       ),
                                       SizedBox(height: 4),
-                                      Text(
-                                        grade.theme ?? "No theme",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 12,
+                                        ),
+                                        child: Text(
+                                          grade.theme ?? "No theme",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                          softWrap: true,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
                                         ),
                                       ),
+
                                       SizedBox(height: 4),
                                       Text(
                                         grade.recordDateAsString != null
@@ -219,7 +234,7 @@ class _GradesPageState extends State<GradesPage> {
                                   child: Text(
                                     grade.numberValue?.toString() ?? "-",
                                     style: TextStyle(
-                                      color: GradeIcon.getColorByGrade(grade),
+                                      color: grade.color,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 24,
                                     ),

@@ -3,9 +3,11 @@ import '../models/grade.dart';
 
 class GradeIcon {
   static Icon getIcon(Grade grade, {double size = 32}) {
+    // Guard: subject-based icons
     if (grade.subject != null) {
-      print(grade.subject!.category.name.toLowerCase());
-      switch (grade.subject!.category.name.toLowerCase()) {
+      final subjectName = grade.subject!.category.name.toLowerCase();
+
+      switch (subjectName) {
         case 'matematika':
           return Icon(Icons.calculate, color: Colors.white, size: size);
         case 'biológia':
@@ -73,22 +75,27 @@ class GradeIcon {
         default:
           return Icon(Icons.school, color: Colors.white, size: size);
       }
-    } else if (grade.type != null) {
-      if (grade.type!.name.toLowerCase() == 'dolgozat') {
-        return Icon(Icons.assignment, color: Colors.white, size: size);
-      }
     }
 
+    // If there's no subject but it's a specific grade type
+    if (grade.type != null && grade.type!.name.toLowerCase() == 'dolgozat') {
+      return Icon(Icons.assignment, color: Colors.white, size: size);
+    }
+
+    // Default fallback icon (colored by grade value)
     return Icon(Icons.school, color: getColorByGrade(grade), size: size);
   }
 
   static Color getColorByGrade(Grade grade) {
     final value = grade.numberValue ?? 0;
 
-    if (value >= 5) return Colors.lightGreen;
-    if (value >= 3) return Colors.yellow;
-    if (value > 0) return Colors.red;
+    if (value >= 5) return Colors.lightGreenAccent.shade700;
+    if (value == 4) return Colors.greenAccent;
+    if (value == 3) return Colors.amberAccent;
+    if (value == 2) return Colors.orangeAccent;
+    if (value == 1) return Colors.redAccent;
 
+    // fallback for missing number / text grades
     return Colors.blueGrey;
   }
 }
