@@ -77,6 +77,6 @@ class Grade {
     return jsonList.map((json) => Grade.fromJson(json as Map<String, dynamic>)).toList();
   }
 
-  Icon get icon => GradeIcon.getIcon(this);
-  Color get color => GradeIcon.getColorByGrade(this);
+  Icon get icon => GradeIcon.getIcon(subjectName: subject?.category.name.toLowerCase(), numberValue: numberValue, typeName: type?.name);
+  Color get color => GradeIcon.getColorByNumber(numberValue ?? 0);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 import 'package:get/get.dart';
 import 'package:study_nest/controllers/language_controller.dart';
+import 'package:study_nest/controllers/kreta_controller.dart';
 
 class HomePage extends StatelessWidget {
   final LanguageController languageController = Get.find<LanguageController>();

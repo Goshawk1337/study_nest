@@ -47,7 +47,7 @@ class _GradesPageState extends State<GradesPage> {
         allSubjects = subjects;
         filteredGrades = loadedGrades;
         selectedSubject = "";
-        avg = gradesService.getAllTimeAverage()?.averageNumber;
+        avg = gradesService.getAllTimeAverage()?.averageNumber?.toStringAsFixed(2) ?? "Nincs átlag";
       });
     } catch (e) {
       Get.snackbar("Error", "Failed to load grades: $e");
@@ -62,11 +62,10 @@ class _GradesPageState extends State<GradesPage> {
       if (subject == null || subject.isEmpty) {
         filteredGrades = grades;
         selectedSubject = "";
-        avg = gradesService.getAllTimeAverage()?.averageNumber;
+        avg = gradesService.getAllTimeAverage()?.averageNumber?.toStringAsFixed(2) ?? "Nincs átlag";
       } else {
         selectedSubject = "$subject ";
-        print(subject.toLowerCase());
-        avg = gradesService.getLocalAverages()[subject.toLowerCase()]?.averageNumber;
+        avg = gradesService.getLocalAverages()[subject.toLowerCase()]?.averageNumber?.toStringAsFixed(2) ?? "Nincs átlag";
         filteredGrades = grades
             .where(
               (g) => g.subject?.name.toLowerCase() == subject.toLowerCase(),
@@ -115,7 +114,7 @@ class _GradesPageState extends State<GradesPage> {
                 spacing: 8,
                 children: [
                   Text(
-                    "${selectedSubject ?? ""}${"avg".tr}",
+                    "${selectedSubject ?? ""}${('avg'.tr.isNotEmpty ? '${'avg'.tr[0].toUpperCase()}${'avg'.tr.substring(1)}' : 'avg'.tr)}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -123,7 +122,7 @@ class _GradesPageState extends State<GradesPage> {
                     ),
                   ),
                   Text(
-                    "$avg",
+                    avg ?? "Betöltés vagy nincs átlag.",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -134,7 +133,7 @@ class _GradesPageState extends State<GradesPage> {
                     spacing: 8,
                     children: [
                       Text(
-                        "osztatlag",
+                        "Osztályátlag",
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.white,
@@ -197,8 +196,6 @@ class _GradesPageState extends State<GradesPage> {
                                             fontSize: 16,
                                           ),
                                           softWrap: true,
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
                                         ),
                                       ),
 
@@ -232,7 +229,7 @@ class _GradesPageState extends State<GradesPage> {
                                   ),
                                   alignment: Alignment.center,
                                   child: Text(
-                                    grade.numberValue?.toString() ?? "-",
+                                    grade.numberValue?.toString() ?? "N/A",
                                     style: TextStyle(
                                       color: grade.color,
                                       fontWeight: FontWeight.bold,

@@ -30,19 +30,22 @@ class KretaController extends GetxController {
       final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
 
       _cachedGrades = Grade.listFromJson(data);
+      _cachedGrades!.sort((a, b) {
+        final aDate = a.recordDateAsString ?? '';
+        final bDate = b.recordDateAsString ?? '';
+        return bDate.compareTo(aDate);
+      });
       return _cachedGrades!;
     } else {
       throw Exception('Failed to load grades: ${response.statusCode}');
     }
   }
 
-  /// Returns per-subject averages as a map
   Map<String, Average> getLocalAverages({String? uid}) {
     if (_cachedGrades == null) {
       throw Exception('No cached grades available. Call setGrades() first.');
     }
 
-    // Group grades by subject UID
     final Map<String, List<Grade>> grouped = {};
     for (final grade in _cachedGrades!) {
       final subjectUid = grade.subject?.name.toLowerCase();
@@ -86,7 +89,6 @@ class KretaController extends GetxController {
     return averages;
   }
 
-  /// Returns one Average that represents the all-time average (across all subjects)
   Average? getAllTimeAverage() {
     final localAverages = getLocalAverages();
     if (localAverages.isEmpty) return null;
@@ -117,4 +119,6 @@ class KretaController extends GetxController {
   void clearGradeCache() {
     _cachedGrades = null;
   }
+
+  
 }
