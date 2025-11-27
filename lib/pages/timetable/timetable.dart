@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/src/simple/get_responsive.dart';
 
 class Timetable extends StatelessWidget {
 
@@ -8,16 +9,7 @@ class Timetable extends StatelessWidget {
       appBar: AppBar(title: Text("Órarend")),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Skibidi"),
-                Text("Sigma")
-              ],
-            ),
-          )
+          
         ],
       )
     );

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
 import 'package:get/get.dart';
@@ -12,11 +14,26 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Obx(
-          () => Text(
-            data.welcomeText(),
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
+        title: FutureBuilder<String>(
+          future: data.welcomeText(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Text(
+                '',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              );
+            } else if (snapshot.hasError) {
+              return Text(
+                'Error',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              );
+            } else {
+              return Text(
+                snapshot.data ?? '',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              );
+            }
+          },
         ),
       ),
       body: Column(
@@ -169,33 +186,38 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
 class HomeData extends GetxController {
   final LanguageController languageController = Get.find<LanguageController>();
-  final RxString name = "Zsombor".obs;
+  final kreta = Get.put(KretaController());
 
-  String welcomeText() {
+  Future<String> welcomeText() async {
+    final fullName = await kreta.getName();
     DateTime now = DateTime.now();
     int hour = now.hour;
 
+    String? getFirstName(String fullName) {
+      List<String> parts = fullName.trim().split(' ');
+      if (parts.length < 2) return null; // No first name found
+      return parts[1]; // The second word
+    }
+
+    final String? firstName = getFirstName(fullName!);
+
+    String withName(String greeting) =>
+        (getFirstName(fullName!)?.isNotEmpty == true) ? "$greeting $firstName" : greeting;
+
     if (hour >= 4 && hour < 6) {
-      // Hajnal
-      return "early_morning_greeting".tr + name.value;
+      return withName("early_morning_greeting".tr);
     } else if (hour >= 6 && hour < 9) {
-      return "morning_greeting".tr + name.value;
+      return withName("morning_greeting".tr);
     } else if (hour >= 9 && hour < 12) {
-      return "forenoon_greeting".tr + name.value;
+      return withName("forenoon_greeting".tr);
     } else if (hour >= 12 && hour < 18) {
-      // Délután
-      return "afternoon_greeting".tr + name.value;
-    } else if (hour >= 18 && hour < 21) {
-      // Este
-      return "evening_greeting".tr + name.value;
-    } else if ((hour >= 20 && hour < 24) || (hour >= 0 && hour < 4)) {
-      // Éjszaka / Éjjel
-      return "night_greeting".tr + name.value;
+      return withName("afternoon_greeting".tr);
+    } else if (hour >= 18 && hour < 20) {
+      return withName("evening_greeting".tr);
     } else {
-      return "welcome".tr + name.value; // Fallback, ha valami furcsa történik
+      return withName("night_greeting".tr);
     }
   }
 }

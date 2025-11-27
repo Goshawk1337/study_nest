@@ -10,6 +10,7 @@ class KretaController extends GetxController {
   final authController = Get.find<AuthController>();
 
   List<Grade>? _cachedGrades;
+  Object? studentName;
 
   Future<List<Grade>> getGrades({bool forceRefresh = false}) async {
     if (!forceRefresh && _cachedGrades != null) {
@@ -35,6 +36,7 @@ class KretaController extends GetxController {
         final bDate = b.recordDateAsString ?? '';
         return bDate.compareTo(aDate);
       });
+      print("Force refreshed grades");
       return _cachedGrades!;
     } else {
       throw Exception('Failed to load grades: ${response.statusCode}');
@@ -71,8 +73,6 @@ class KretaController extends GetxController {
         average: avg.toDouble(),
         dateAsString: lastGrade.recordDateAsString ?? '',
       );
-
-      print(subjectUid);
 
       averages[subjectUid] = Average(
         averageNumber: avg.toDouble(),
@@ -120,5 +120,27 @@ class KretaController extends GetxController {
     _cachedGrades = null;
   }
 
-  
+  Future<String?> getName({bool forceRefresh = false}) async {
+    // if (studentName != null) {
+    //   return studentName;
+    // }
+    final response = await http.get(
+      Uri.parse(
+        'https://${authController.instituteCode}.e-kreta.hu/ellenorzo/v3/sajat/TanuloAdatlap',
+      ),
+      headers: {
+        'Authorization': 'Bearer ${authController.accessToken}',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      studentName = data['Nev'] as String?;
+
+      return studentName as String?;
+    } else {
+      throw Exception('Failed to load student name: ${response.statusCode}');
+    }
+  }
 }

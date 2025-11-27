@@ -82,8 +82,9 @@ class _GradesPageState extends State<GradesPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: DropdownButtonFormField<String>(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
+            child: DropdownButtonFormField<String?>(
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: "Szűrő",
                 border: OutlineInputBorder(
@@ -91,7 +92,10 @@ class _GradesPageState extends State<GradesPage> {
                 ),
               ),
               items: [
-                DropdownMenuItem(value: null, child: Text("Összes tantárgy")),
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text("Összes tantárgy"),
+                ),
                 ...allSubjects.map(
                   (s) => DropdownMenuItem(value: s, child: Text(s)),
                 ),
@@ -99,6 +103,7 @@ class _GradesPageState extends State<GradesPage> {
               onChanged: _filterBySubject,
             ),
           ),
+
 
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
