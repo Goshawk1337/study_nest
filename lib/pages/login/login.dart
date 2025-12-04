@@ -13,7 +13,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController idController = TextEditingController();
   final TextEditingController instituteController = TextEditingController();
-
   List<dynamic> schoolOptions = [];
   List<dynamic> filteredSchools = [];
   dynamic selectedSchool;
@@ -90,7 +89,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,74 +98,144 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
+              Container(
+                height: 100,
+                width: 100,
+                decoration: BoxDecoration(
+                  color: Colors.blue[800],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.school, size: 70, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
               const Text(
-                "Bejelentkezés",
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                "E-Kréta Bejelentkezés",
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900),
+              ),
+              const Text(
+                "Jelentkezz be az E-kréta fiókodba",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w300),
               ),
               const SizedBox(height: 30),
-              TextField(
-                controller: idController,
-                decoration: const InputDecoration(
-                  labelText: "Azonosító",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: instituteController,
-                onChanged: filterSchools,
-                autocorrect: false,
-                decoration: const InputDecoration(
-                  labelText: "Iskola",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 15),
-              if (filteredSchools.isNotEmpty)
-                Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.black,
-                      width: 1,
-                      style: BorderStyle.solid,
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.8),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListView(
-                    padding: EdgeInsets.all(0.0),
-                    children: filteredSchools
-                        .map(
-                          (school) => ListTile(
-                            title: Text(school['nev'] ?? ''),
-                            subtitle: Text(
-                              "Azonosító: ${school['azonosito']} | OM: ${school['omKod']}",
-                            ),
-                            onTap: () {
-                              setState(() {
-                                selectedSchool = school;
-                                instituteController.text = school['nev'];
-                                filteredSchools = [];
-                              });
-                            },
+                  ],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  spacing: 15,
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Azonosító",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    TextField(
+                      controller: idController,
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Iskola",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    TextField(
+                      controller: instituteController,
+
+                      onChanged: filterSchools,
+                      autocorrect: false,
+                      decoration: const InputDecoration(
+                         contentPadding: EdgeInsets.symmetric(vertical: 10.0),
+
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                        ),
+                      ),
+                    ),
+                    if (filteredSchools.isNotEmpty)
+                      Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.blue[900]!,
+                            width: 1,
+                            style: BorderStyle.solid,
                           ),
-                        )
-                        .toList(),
-                  ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ListView(
+                          padding: EdgeInsets.all(0.0),
+                          children: filteredSchools
+                              .map(
+                                (school) => ListTile(
+                                  title: Text(school['nev'] ?? ''),
+                                  subtitle: Text(
+                                    "Azonosító: ${school['azonosito']} | OM: ${school['omKod']}",
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedSchool = school;
+                                      instituteController.text = school['nev'];
+                                      filteredSchools = [];
+                                    });
+                                  },
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ElevatedButton.icon(
+                      onPressed: _login,
+
+                      icon: const Icon(Icons.login, size: 20),
+                      style: ElevatedButton.styleFrom(
+                        fixedSize: Size(800, 50),
+                        backgroundColor: Colors.blue[800],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        textStyle: TextStyle(
+                          fontSize: 18,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      label: const Text("Bejelentkezés"),
+                    ),
+                  ],
                 ),
-              const SizedBox(height: 15),
-              ElevatedButton.icon(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  fixedSize: Size(800, 50),
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  textStyle: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                label: const Text("Bejelentkezés"),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                "Az alkalmazás nem hivatalos, és nem áll kapcsolatban az e-Kréta Informatikai Zrt.-vel.",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
+                textAlign: TextAlign.center,
               ),
             ],
           ),

@@ -9,8 +9,8 @@ import 'package:webview_flutter/webview_flutter.dart';
 class LoginWebviewWidget extends StatefulWidget {
   final String? username;
   final String? schoolId;
-
-  const LoginWebviewWidget({super.key, this.username, this.schoolId});
+  final String? password;
+  const LoginWebviewWidget({super.key, this.username, this.password, this.schoolId});
 
   @override
   State<LoginWebviewWidget> createState() => _LoginWebviewWidgetState();
@@ -40,7 +40,7 @@ class _LoginWebviewWidgetState extends State<LoginWebviewWidget> {
     var loginUrl = _buildLoginUrl(
       username: widget.username,
       schoolId: widget.schoolId,
-    );
+     );
 
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -66,14 +66,14 @@ class _LoginWebviewWidgetState extends State<LoginWebviewWidget> {
       ..loadRequest(Uri.parse(loginUrl));
   }
 
-  String _buildLoginUrl({String? username, String? schoolId}) {
+  String _buildLoginUrl({String? username, String? schoolId }) {
     final base = "$idpBase/Account/Login?ReturnUrl=";
     final returnUrl =
         Uri.encodeComponent("/connect/authorize/callback?redirect_uri=$redirectUri"
             "&client_id=$clientId"
             "&response_type=code"
             "${username != null ? "&login_hint=$username" : ""}"
-            "&prompt=login"
+             "&prompt=login"
             "&state=$state"
             "&nonce=$nonce"
             "&scope=openid%20email%20offline_access%20kreta-ellenorzo-webapi.public"

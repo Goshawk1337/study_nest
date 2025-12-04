@@ -45,8 +45,10 @@ class KretaController extends GetxController {
 
   Map<String, Average> getLocalAverages({String? uid}) {
     if (_cachedGrades == null) {
-      throw Exception('No cached grades available. Call setGrades() first.');
-    }
+      // Cannot await in non-async method, fetch grades synchronously first
+      // You should call getGrades() before calling getLocalAverages()
+      return {};
+     }
 
     final Map<String, List<Grade>> grouped = {};
     for (final grade in _cachedGrades!) {

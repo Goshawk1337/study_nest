@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:get/utils.dart';
@@ -9,186 +10,184 @@ import 'package:study_nest/controllers/kreta_controller.dart';
 class HomePage extends StatelessWidget {
   final LanguageController languageController = Get.find<LanguageController>();
   final HomeData data = Get.put(HomeData());
+  Future<void> _loadGrades({bool forceRefresh = false}) async {
+ 
+    try {
+      final loadedGrades = await data.kreta.getGrades(
+        forceRefresh: forceRefresh,
+      );
 
+ 
+    } catch (e) {
+      Get.snackbar("Error", "Failed to load grades: $e");
+    } finally {}
+  }
+ 
   @override
   Widget build(BuildContext context) {
+      _loadGrades();
     return Scaffold(
       appBar: AppBar(
-        title: FutureBuilder<String>(
-          future: data.welcomeText(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Text(
-                '',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              );
-            } else if (snapshot.hasError) {
-              return Text(
-                'Error',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              );
-            } else {
-              return Text(
-                snapshot.data ?? '',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              );
-            }
-          },
+        title: Text(
+          "Study Nest",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.blue,
+        centerTitle: false,
+
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.grey.shade500,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
               ),
-              padding: EdgeInsets.all(16),
+            ),
+            onPressed: () {
+              //TODO: Notifications
+              return;
+            },
+          ),
+        ],
+      ),
+
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              margin: EdgeInsets.symmetric(vertical: 30.0),
+              padding: EdgeInsets.all(16.0),
+              alignment: Alignment.center,
               width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 8,
+              height: 90,
+              decoration: BoxDecoration(
+                color: Colors.blue.shade500,
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    "next_class".tr,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    "Testnevelés",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    spacing: 8,
-                    children: [
-                      Icon(Icons.access_alarm, color: Colors.white),
-                      Text(
-                        "08:00 - 08:45",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    spacing: 8,
-                    children: [
-                      Icon(Icons.location_pin, color: Colors.white),
-                      Text(
-                        "Tornaterem",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  Icon(Icons.waving_hand, color: Colors.white, size: 32),
+                  SizedBox(width: 12),
+                  FutureBuilder<String>(
+                    future: data.welcomeText(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text(
+                          'error_greeting'.tr,
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        );
+                      } else {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              snapshot.data!,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '10.A - Sigma School',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   ),
                 ],
               ),
             ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.blue,
-                ),
-                padding: EdgeInsets.all(16),
-                child: SingleChildScrollView(
+            GridView(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
                   child: Column(
-                    children: List.generate(32, (index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.lightBlue,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(Icons.school, color: Colors.white, size: 32),
-
-                              SizedBox(width: 16),
-
-                              // Középső rész: tantárgy + dolgozat
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Matematika",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      "Dolgozat - 2025.09.13",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.grade, size: 32, color: Colors.blue),
+                      SizedBox(height: 10),
+                      FutureBuilder<String>(
+                        future: data.getUserAverage(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text(
+                              'N/A',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-
-                              // Jobb oldal: jegy körben
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "5",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                  ),
-                                ),
+                            );
+                          } else {
+                            return Text(
+                              snapshot.data!,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
+                            );
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+
 class HomeData extends GetxController {
   final LanguageController languageController = Get.find<LanguageController>();
   final kreta = Get.put(KretaController());
+
+  Future<String> getUserAverage() async {
+    final allTimeAverage = kreta.getAllTimeAverage();
+
+    if (allTimeAverage == null) return "N/A";
+    return allTimeAverage?.averageNumber?.toStringAsFixed(2) ?? "Nincs átlag";
+  }
 
   Future<String> welcomeText() async {
     final fullName = await kreta.getName();
@@ -204,7 +203,9 @@ class HomeData extends GetxController {
     final String? firstName = getFirstName(fullName!);
 
     String withName(String greeting) =>
-        (getFirstName(fullName!)?.isNotEmpty == true) ? "$greeting $firstName" : greeting;
+        (getFirstName(fullName!)?.isNotEmpty == true)
+        ? "$greeting $firstName"
+        : greeting;
 
     if (hour >= 4 && hour < 6) {
       return withName("early_morning_greeting".tr);
